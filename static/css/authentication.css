@@ -1,0 +1,33 @@
+
+.form,.vidform{
+    width: 500px;
+    height: 100%;
+    margin: auto;
+    padding:20px;
+    border-radius: 16px;
+    background: #16262d;
+    box-shadow:  5px 5px 10px #111e23, 
+                -5px -5px 10px #1b2e37;
+    padding-left: 100px;
+    padding-bottom: 40px;
+    /* top:250px; */
+    margin-top: 10%;
+}
+
+.form span, .form ul, .form li{
+    font-size: 10px;
+    list-style: none;
+}
+
+.form ul{
+    padding: 0;
+}
+
+.form input{
+    display: block;
+}
+
+.vidform{
+    margin: auto;
+    padding-left: 0;
+}
