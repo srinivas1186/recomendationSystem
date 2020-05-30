@@ -7,6 +7,12 @@ Requirements:
 - Download ffmpeg (https://www.ffmpeg.org/download.html)
   ffmpeg is used to build thumbnails of videos added 
 
+Ffmpeg installation for windows
+https://www.wikihow.com/Install-FFmpeg-on-Windows
+
+Ffmpeg installation for ubuntu
+sudo apt install ffmpeg
+
 Setup steps:
 
 ```
