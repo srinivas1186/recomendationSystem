@@ -11,5 +11,7 @@ urlpatterns = [
     path('logout/',views.userLogout,name='logout'),
     path('video/',views.getVideo),
     path('video/add/',views.addVideo),
-    path('video/delete/',views.delVideo)
+    path('video/delete/',views.delVideo),
+    path('generateThumbnail/',views.generateImages),
+    path(r'play/<id>',views.playVideo)
 ]

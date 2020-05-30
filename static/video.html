@@ -20,16 +20,22 @@
         </div>
     </nav>
     {% block content %}
+
     <div class="vidform">
         <h2>Video</h2>
         <form method="post" enctype="multipart/form-data" >
             {% csrf_token %}
             {{ form.as_p }}
+            <p><label for="id_tags">Tags:</label> 
+                <input type="text" name="id_tags" required=''>
+                <span>Enter comma seperated values</span>
+            </p>
             <button type="submit" value="upload">Add video</button>
         </form>
     </div>
     
     {% endblock %}
+
 
 </body>
 </html>

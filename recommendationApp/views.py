@@ -11,15 +11,38 @@ import subprocess
 from subprocess import check_output
 # Create your views here.
 
+HOME_VIDEOS_COUNT = 10
+HISTORIES_TO_CONSIDER = 10
+
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    return HttpResponse("Hello, world.")
 
 @login_required
 def home(request):
-    videos = Video.objects.all()
+    videos = []
+    interest_tags = set()
+    history = History.objects.filter(uid=request.user.id).order_by('-created_on') [:HISTORIES_TO_CONSIDER]
+    if history:
+        for h in history:
+            tags = h.vid.tags.all() #Getting tags of watched videos
+            for tag in tags:
+                interest_tags.add(tag.id)
+        searched_videos = Video.objects.filter(tags__in= interest_tags).distinct()[:HOME_VIDEOS_COUNT]
+        videos = [*searched_videos ]
+        searched_videos  = [ video.id for video in searched_videos]
+        if len(videos)!=10:
+            more_videos = Video.objects.exclude(id__in=searched_videos).order_by('-views')[:( HOME_VIDEOS_COUNT - len(searched_videos) )]
+            videos = [*videos,*more_videos]
+    else:
+        videos = Video.objects.all().order_by("-views")[:HOME_VIDEOS_COUNT]
+    
+    # Get videos he is interested in using tags of videos he watched and order by views
+
     return render(request, 'home.html', { 'videos':videos })
 
 def signup(request):
+    if request.user:
+        return redirect('/home')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -39,6 +62,16 @@ def userLogout(request):
     logout(request)
     return redirect('index')
 
+def makeThumbnail(id):
+    video = Video.objects.get(id=id)
+    if not video:
+        return
+    name = video.videofile.name + '.jpg'
+    path = video.videofile.path + '.jpg'
+    check_output(f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y', shell=True)
+    video.thumbnail = path
+    video.save()
+
 # get video
 @login_required
 def getVideo(request):
@@ -46,14 +79,26 @@ def getVideo(request):
         form = VideoForm(request.POST, request.FILES or None)
         if form.is_valid():
             temp  = form.save(commit=False)
-            temp.created_by = request.user
-            print(temp['videofile'])
-            file_path = temp['videofile']['path']
-            file_name = temp['videofile']['name']
 
+            tags = request.POST["id_tags"] or ''
+            tags = set([t.strip().lower() for t in tags.split(',')])
+            tagObjects = []
+            for tag in tags:
+                try:
+                    t = Tag.objects.get(name = tag)
+                except:
+                    t = None
+                if not t:
+                    t = Tag(name = tag)
+                    t.save()
+                tagObjects.append(t)
+            temp.created_by = request.user
+            file_path = temp.videofile.path
+            file_name = temp.videofile.name
             temp.thumbnail = file_name+'.jpg'
-            check_output(f'ffmpeg  -itsoffset -4  -i {file_path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {temp.thumbnail}', shell=True)
             temp.save()
+            temp.tags.add(*tagObjects)
+            makeThumbnail(temp.id)
             form.save_m2m()
             return redirect('home')
         else:
@@ -76,3 +121,28 @@ def delVideo(request):
         pass
     else:
         return HttpResponseBadRequest('Invalid request')
+
+
+# Generate thumbnails for videos 
+
+def generateImages(request):
+    videos = Video.objects.all()
+    for video in videos:
+        name = video.videofile.name + '.jpg'
+        path = video.videofile.path + '.jpg'
+        check_output(f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y', shell=True)
+        video.thumbnail = path
+        video.save()
+
+    return JsonResponse({'message':'Done!'})
+
+@login_required
+def playVideo(request,id):
+    video = Video.objects.get(id=id)
+    video.views = video.views + 1
+    video.save()
+    # Create history
+    history = History(uid=request.user,vid=video)
+    history.save()
+
+    return render(request,'play.html',{"video":video})

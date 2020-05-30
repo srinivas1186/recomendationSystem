@@ -21,13 +21,21 @@
     <main>
         <div class="videos-container">
             {% for video in videos %}
+                <div class="video">
+                    <a href="/play/{{ video.id }}">
+
+                    <img src="{{ video.videofile.url }}.jpg" alt="" >
+                    </a>
+                </div>
+            {% endfor %}
+            <!-- {% for video in videos %}
             <div class="video">
                 <video width='250' controls>
                     <source src='{{ video.videofile.url }}' type='video/mp4'>
                     Your browser does not support the video tag.
                 </video>
             </div>
-            {% endfor %}
+            {% endfor %} -->
 
         </div>
     </main>

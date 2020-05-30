@@ -1,6 +1,10 @@
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
+import string
+import random
+
+characters = string.ascii_letters + string.digits
 
 # Create your models here.
 class Tag(models.Model):
@@ -18,16 +22,22 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+def changeFileName(instance, filename):
+    name = "".join(random.choices(characters,k=50))  #creating new name for the video
+    extension = filename.split('.')[-1]
+    return '{0}.{1}'.format(name, extension or 'mp4')
+
 class Video(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,verbose_name="Video Id")
     name = models.TextField(verbose_name="Video Name",null=False, blank=False)
     path = models.TextField(verbose_name="File Path",null=True)
-    videofile = models.FileField(upload_to='media/',null=False,verbose_name='Video File')
+    videofile = models.FileField(upload_to=changeFileName,null=False,verbose_name='Video File')
     created_on = models.DateTimeField(auto_now_add=True)
     thumbnail = models.TextField(verbose_name='thumnail')
+    description = models.TextField(verbose_name='Video description',null=True,blank=True)
     created_by = models.ForeignKey(User,on_delete=models.CASCADE)
     views = models.IntegerField(verbose_name="Video views",default=0)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag,related_name="tags")
     class Meta:
         indexes:[
             models.Index(fields=['id'])
