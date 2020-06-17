@@ -23,8 +23,10 @@
             {% for video in videos %}
                 <div class="video">
                     <a href="/play/{{ video.id }}">
-
-                    <img src="{{ video.videofile.url }}.jpg" alt="" >
+                        <video controls data-href="/play/{{ video.id }}" >
+                            <source src='{{ video.videofile.url }}' type='video/mp4' preload="none">
+                            Your browser does not support the video tag.
+                        </video>
                     </a>
                 </div>
             {% endfor %}
@@ -39,5 +41,21 @@
 
         </div>
     </main>
+    <script>
+        let v = document.querySelectorAll('video');
+        v.forEach(e=>{
+            console.log(e, "added");
+            let c = (event)=>{
+                let data = event.target.dataset;
+                let link = data['href'];
+                location.href = link;
+            }
+            e.onclick = c;
+            e.onplay = c;
+            e.onseeking = c;
+            e.onseeked = c;
+            e.onselect=c;
+        })
+    </script>
 </body>
 </html>

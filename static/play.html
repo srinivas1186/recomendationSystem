@@ -25,7 +25,7 @@
         <div class="name">{{video.name}}</div>
         <div class="videoPlay">
             <video controls>
-                <source src='{{ video.videofile.url }}' type='video/mp4'>
+                <source src='{{ video.videofile.url }}' type='video/mp4' preload="none">
                 Your browser does not support the video tag.
             </video>
         </div>
@@ -40,6 +40,49 @@
         </div>
     </div>
     
+    <script>
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i <ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        let videoId = "{{video.id}}";
+        let v = document.querySelector('.videoPlay > video:nth-child(1)');
+        let min_duration = v.duration/2;
+        console.log('Loaded and added eventlistener');
+        let history_added = false;
+        v.ontimeupdate =()=>{
+            if(v.currentTime>min_duration && (!history_added) ){
+                const csrftoken = getCookie ('csrftoken')
+                fetch('addView/',{
+                    method:"POST",
+                    credentials:"same-origin",
+                    headers:{
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({id:videoId}) 
+                }).then(resp=>{
+                    return resp.json()
+                }).then(data=>{
+                    history_added = true;
+                    console.log(data);
+                })
+            }
+            console.log(v.currentTime);
+        }
+    </script>
     
 
 </body>

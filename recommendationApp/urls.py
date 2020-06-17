@@ -13,5 +13,6 @@ urlpatterns = [
     path('video/add/',views.addVideo),
     path('video/delete/',views.delVideo),
     path('generateThumbnail/',views.generateImages),
+    path('play/addView/',views.addViewAndHistory),
     path(r'play/<id>',views.playVideo)
 ]

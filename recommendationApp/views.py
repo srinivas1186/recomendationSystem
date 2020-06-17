@@ -9,13 +9,14 @@ from .models import *
 from django.conf import settings
 import subprocess
 from subprocess import check_output
+import json
 # Create your views here.
 
 HOME_VIDEOS_COUNT = 10
 HISTORIES_TO_CONSIDER = 10
 
 def index(request):
-    return HttpResponse("Hello, world.")
+    return redirect('/home')
 
 @login_required
 def home(request):
@@ -41,7 +42,7 @@ def home(request):
     return render(request, 'home.html', { 'videos':videos })
 
 def signup(request):
-    if request.user:
+    if request.user.is_authenticated:
         return redirect('/home')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -68,7 +69,10 @@ def makeThumbnail(id):
         return
     name = video.videofile.name + '.jpg'
     path = video.videofile.path + '.jpg'
-    check_output(f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y', shell=True)
+    c = f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y'
+    s = c.split()
+    print(s)
+    check_output(c, shell=True)
     video.thumbnail = path
     video.save()
 
@@ -98,7 +102,7 @@ def getVideo(request):
             temp.thumbnail = file_name+'.jpg'
             temp.save()
             temp.tags.add(*tagObjects)
-            makeThumbnail(temp.id)
+            # makeThumbnail(temp.id)
             form.save_m2m()
             return redirect('home')
         else:
@@ -130,7 +134,10 @@ def generateImages(request):
     for video in videos:
         name = video.videofile.name + '.jpg'
         path = video.videofile.path + '.jpg'
-        check_output(f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y', shell=True)
+        c = f'ffmpeg  -itsoffset -4  -i {video.videofile.path} -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 {path} -y'
+        s = c.split()
+        print(s)
+        subprocess.call(c, shell=True)
         video.thumbnail = path
         video.save()
 
@@ -139,10 +146,23 @@ def generateImages(request):
 @login_required
 def playVideo(request,id):
     video = Video.objects.get(id=id)
+    return render(request,'play.html',{"video":video})
+
+
+@login_required
+def addViewAndHistory(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Invalid request")
+    body = json.loads(request.body)
+
+    video = Video.objects.get(id = body['id'])
+    if not video:
+        return HttpResponseBadRequest("Invalid video id")
+    
     video.views = video.views + 1
     video.save()
     # Create history
     history = History(uid=request.user,vid=video)
     history.save()
 
-    return render(request,'play.html',{"video":video})
+    return JsonResponse({"message":"Added successfully"})
