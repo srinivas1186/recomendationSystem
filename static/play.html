@@ -61,9 +61,15 @@
         let min_duration = v.duration/2;
         console.log('Loaded and added eventlistener');
         let history_added = false;
+        let inprogress = false;
         v.ontimeupdate =()=>{
             if(v.currentTime>min_duration && (!history_added) ){
-                const csrftoken = getCookie ('csrftoken')
+                if(inprogress){
+                    return;
+                }
+                const csrftoken = getCookie ('csrftoken');
+                inprogress = true;
+                setTimeout(()=>{inprogress=false},3000);
                 fetch('addView/',{
                     method:"POST",
                     credentials:"same-origin",
@@ -78,6 +84,7 @@
                 }).then(data=>{
                     history_added = true;
                     console.log(data);
+                    inprogress = false;
                 })
             }
             console.log(v.currentTime);
