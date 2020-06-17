@@ -41,7 +41,8 @@
     </div>
     
     <script>
-        function getCookie(cname) {
+        window.onload= function(){
+            function getCookie(cname) {
             var name = cname + "=";
             var decodedCookie = decodeURIComponent(document.cookie);
             var ca = decodedCookie.split(';');
@@ -55,40 +56,43 @@
                 }
             }
             return "";
-        }
-        let videoId = "{{video.id}}";
-        let v = document.querySelector('.videoPlay > video:nth-child(1)');
-        let min_duration = v.duration/2;
-        console.log('Loaded and added eventlistener');
-        let history_added = false;
-        let inprogress = false;
-        v.ontimeupdate =()=>{
-            if(v.currentTime>min_duration && (!history_added) ){
-                if(inprogress){
-                    return;
-                }
-                const csrftoken = getCookie ('csrftoken');
-                inprogress = true;
-                setTimeout(()=>{inprogress=false},3000);
-                fetch('addView/',{
-                    method:"POST",
-                    credentials:"same-origin",
-                    headers:{
-                        'X-CSRFToken': csrftoken,
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({id:videoId}) 
-                }).then(resp=>{
-                    return resp.json()
-                }).then(data=>{
-                    history_added = true;
-                    console.log(data);
-                    inprogress = false;
-                })
             }
-            console.log(v.currentTime);
+            let videoId = "{{video.id}}";
+            let v = document.querySelector('.videoPlay > video:nth-child(1)');
+            let min_duration = v.duration/2;
+            console.log('Loaded and added eventlistener');
+            let history_added = false;
+            let inprogress = false;
+            v.ontimeupdate =()=>{
+                min_duration = v.duration/2;
+                if(v.currentTime>min_duration && (!history_added) ){
+                    if(inprogress){
+                        return;
+                    }
+                    const csrftoken = getCookie ('csrftoken');
+                    inprogress = true;
+                    setTimeout(()=>{inprogress=false},3000);
+                    fetch('addView/',{
+                        method:"POST",
+                        credentials:"same-origin",
+                        headers:{
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({id:videoId}) 
+                    }).then(resp=>{
+                        return resp.json()
+                    }).then(data=>{
+                        history_added = true;
+                        console.log(data);
+                        inprogress = false;
+                    })
+                }
+                console.log(v.currentTime);
+            }
         }
+        
     </script>
     
 
